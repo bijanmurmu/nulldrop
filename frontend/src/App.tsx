@@ -24,10 +24,6 @@ const App = () => {
           <h1 className="font-serif font-black text-3xl tracking-tight">Nulldrop.</h1>
           <p className="text-xs uppercase tracking-widest mt-2 text-editorial-fg/50">Subject Isolation Engine</p>
         </div>
-        <div className="text-right text-xs uppercase tracking-widest text-editorial-fg/40">
-          <p>Vol. 02</p>
-          <p className="mt-1">Studio Edition</p>
-        </div>
       </header>
 
       <main className="flex-grow flex flex-col lg:flex-row relative">
@@ -40,7 +36,7 @@ const App = () => {
         {/* Left Column: Typographic Art & Technical Specs */}
         <div className="w-full lg:w-5/12 p-8 py-12 md:p-12 md:pb-8 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-editorial-fg/10 relative overflow-hidden lg:overflow-y-auto">
           <div className="relative z-10 w-full max-w-md mx-auto lg:mx-0">
-            <h2 className="font-serif text-[4rem] lg:text-[5.5rem] leading-[0.95] text-editorial-fg mb-6">
+            <h2 className="font-serif text-[3.25rem] sm:text-[4rem] lg:text-[5.5rem] leading-[0.95] text-editorial-fg mb-6">
               Sever <br/>
               <span className="italic text-editorial-accent">the</span> <br/>
               Background.
