@@ -4,16 +4,9 @@ from fastapi.responses import StreamingResponse
 from rembg import remove, new_session
 from io import BytesIO
 from PIL import Image
+import os
 
 app = FastAPI()
-
-# Attempt to load the state-of-the-art Bria AI model (briarmbg1.4)
-# This model provides commercially perfect edge detection and handles hair/fur natively better than older models.
-# If unavailable in the current rembg version, fallback to the high-precision ISNet model.
-try:
-    model_session = new_session("briarmbg1.4")
-except Exception:
-    model_session = new_session("isnet-general-use")
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,6 +14,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# LAZY LOADING: We don't initialize the model globally anymore.
+# Initializing globally causes Render's 60-second port scan to timeout because 
+# downloading the AI weights blocks the server from starting.
+model_session = None
+
+def get_session():
+    global model_session
+    if model_session is None:
+        try:
+            # Try to load Bria AI (State of the art)
+            model_session = new_session("briarmbg1.4")
+        except Exception:
+            # Render Free Tier only has 512MB RAM. 'isnet' (179MB) causes an Out-Of-Memory SIGKILL.
+            # 'silueta' is a highly-optimized 43MB model that retains fantastic edge precision
+            # while easily fitting inside strict cloud memory constraints.
+            model_session = new_session("silueta")
+    return model_session
 
 @app.post("/remove-bg")
 def remove_bg(file: UploadFile = File(...)):
@@ -30,15 +41,12 @@ def remove_bg(file: UploadFile = File(...)):
     try:
         input_image = file.file.read()
         
-        # Premium Edge Detection Configuration:
-        # - alpha_matting: True (allows semi-transparent edges for hair/fur)
-        # - foreground_threshold: 240 (only the most confident pixels are solid foreground)
-        # - background_threshold: 10 (highly strict background threshold to prevent haloing)
-        # - erode_size: 10 (reduced from 15 to prevent aggressively eating into the subject's rigid edges)
-        # - post_process_mask: True (removes noise and disconnected floating artifacts)
+        session = get_session()
+        
+        # Premium Edge Detection Configuration
         result_bytes = remove(
             input_image,
-            session=model_session,
+            session=session,
             alpha_matting=True,
             alpha_matting_foreground_threshold=240,
             alpha_matting_background_threshold=10,
