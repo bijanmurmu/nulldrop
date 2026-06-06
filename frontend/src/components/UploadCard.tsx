@@ -2,8 +2,8 @@ import { useState, useRef } from "react";
 import { ReactCompareSlider, ReactCompareSliderImage, ReactCompareSliderHandle } from "react-compare-slider";
 import toast from "react-hot-toast";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-
+const RAW_API_URL = import.meta.env.VITE_API_URL || "https://nulldrop.onrender.com";
+const API_URL = RAW_API_URL.replace(/\/$/, ""); // Strip trailing slash to prevent 307 Redirect CORS errors
 const UploadCard = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
