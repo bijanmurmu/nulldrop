@@ -1,9 +1,11 @@
 import os
 # CRITICAL: Prevent ONNX from allocating massive thread pools which cause silent SIGKILL Out of Memory crashes on 512MB free tiers.
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["OPENBLAS_NUM_THREADS"] = "1"
-os.environ["RAYON_NUM_THREADS"] = "1"
+# We ONLY apply this chokehold if we are running on Render. Locally, we want full CPU power!
+if os.environ.get("RENDER") is not None:
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["MKL_NUM_THREADS"] = "1"
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+    os.environ["RAYON_NUM_THREADS"] = "1"
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
