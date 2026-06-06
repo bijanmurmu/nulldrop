@@ -42,8 +42,10 @@ def remove_bg(file: UploadFile = File(...)):
         # OOM PREVENTER: Max dimension 2048px. 
         # A 12-Megapixel iPhone photo converts to a ~150MB raw tensor array in memory. 
         # When ONNX clones that tensor, it immediately exceeds the 512MB Render limit.
+        # We only apply this limit if the code is running on Render's servers.
         max_size = 2048
-        if img.width > max_size or img.height > max_size:
+        is_render = os.environ.get("RENDER") is not None
+        if is_render and (img.width > max_size or img.height > max_size):
             img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
             
         # Convert back to bytes for rembg
