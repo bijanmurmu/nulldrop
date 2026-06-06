@@ -1,81 +1,167 @@
 import { useState, useRef } from "react";
+import { ReactCompareSlider, ReactCompareSliderImage, ReactCompareSliderHandle } from "react-compare-slider";
+import toast from "react-hot-toast";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const UploadCard = () => {
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = async () => {
+  const handleFile = (selectedFile: File) => {
+    if (!selectedFile.type.startsWith("image/")) {
+      toast.error("PLEASE PROVIDE A VALID IMAGE.");
+      return;
+    }
+    setFile(selectedFile);
+    setPreview(URL.createObjectURL(selectedFile));
+    setOutputUrl(null);
+  };
+
+  const processImage = async () => {
     if (!file) return;
-    setLoading(true);
+    setIsLoading(true);
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("http://localhost:8000/remove-bg", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const response = await fetch(`${API_URL}/remove-bg`, {
+        method: "POST",
+        body: formData,
+      });
 
-    const blob = await res.blob();
-    setOutputUrl(URL.createObjectURL(blob));
-    setLoading(false);
+      if (!response.ok) throw new Error("EXTRACTION FAILED");
+
+      const blob = await response.blob();
+      setOutputUrl(URL.createObjectURL(blob));
+      toast.success("ISOLATION COMPLETE");
+    } catch (err: any) {
+      toast.error(err.message || "SYSTEM ERROR");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleChooseFile = () => {
-    fileInputRef.current?.click();
+  const handleDownload = (format: 'webp' | 'png' | 'jpeg') => {
+    if (!outputUrl) return;
+
+    if (format === 'webp') {
+      const a = document.createElement('a');
+      a.href = outputUrl;
+      a.download = `nulldrop-isolated.webp`;
+      a.click();
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      if (format === 'jpeg') {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      ctx.drawImage(img, 0, 0);
+      
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL(`image/${format}`, 1.0);
+      a.download = `nulldrop-isolated.${format === 'jpeg' ? 'jpg' : 'png'}`;
+      a.click();
+    };
+    img.src = outputUrl;
   };
 
   return (
-    <>
-      <div className="bg-white/90 text-black p-8 rounded-3xl shadow-2xl w-full max-w-md mx-auto flex flex-col items-center">
-        {/* Custom Choose File Button */}
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          ref={fileInputRef}
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        />
-        <button
-          type="button"
-          onClick={handleChooseFile}
-          className="mb-4 px-6 py-3 rounded-full bg-gradient-to-r from-green-400 to-blue-500 text-white font-semibold shadow-lg hover:scale-105 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
+    <div className="w-full flex-grow min-h-[500px] lg:min-h-0 max-h-[700px] max-w-4xl bg-editorial-bg border border-editorial-fg/10 shadow-2xl shadow-editorial-fg/5 flex flex-col">
+      {!preview ? (
+        <div
+          className={`flex-grow w-full flex flex-col items-center justify-center p-12 cursor-pointer transition-colors ${
+            isDragging ? "bg-editorial-surface border-editorial-fg/30" : "bg-transparent border-editorial-fg/10 hover:bg-editorial-surface/50"
+          }`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+            if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]);
+          }}
+          onClick={() => fileInputRef.current?.click()}
         >
-          {file ? "Change File" : "Choose Image"}
-        </button>
-        {file && (
-          <div className="mb-4 text-sm text-gray-700 font-medium truncate max-w-xs">
-            Selected: {file.name}
+          <div className="w-16 h-16 border rounded-full border-editorial-fg/20 flex items-center justify-center mb-6">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-6 h-6">
+              <path d="M12 17V3" />
+              <path d="M7 8l5-5 5 5" />
+              <path d="M3 21h18" />
+            </svg>
           </div>
-        )}
-        {/* Remove BG Button */}
-        <button
-          onClick={handleUpload}
-          disabled={!file || loading}
-          className={`w-full px-6 py-3 rounded-full font-bold bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg transition-all duration-150 hover:from-blue-500 hover:to-green-400 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed mb-2`}
-        >
-          {loading ? "Removing..." : "Remove Background"}
-        </button>
+          <h3 className="font-serif text-2xl italic text-editorial-fg mb-3">Provide an Artifact</h3>
+          <p className="font-sans text-xs tracking-widest uppercase text-editorial-fg/50">Click or Drag to upload</p>
+          <input type="file" ref={fileInputRef} onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} accept="image/*" className="hidden" />
+        </div>
+      ) : (
+        <div className="flex flex-col flex-grow h-full overflow-hidden">
+          <div className="p-4 md:p-6 border-b border-editorial-fg/10 flex justify-between items-center">
+            <span className="font-sans text-xs tracking-widest uppercase text-editorial-fg/60 truncate max-w-[250px]">{file?.name}</span>
+            <button onClick={() => { setPreview(null); setOutputUrl(null); }} className="text-editorial-fg/40 hover:text-editorial-accent transition-colors text-xs tracking-widest uppercase">
+              Discard
+            </button>
+          </div>
+          
+          <div className="flex-grow relative bg-editorial-surface/30 overflow-hidden">
+            <div className="absolute inset-4 md:inset-8 flex items-center justify-center">
+              {isLoading ? (
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-8 h-8 border-2 border-editorial-fg/20 border-t-editorial-fg rounded-full animate-spin"></div>
+                  <p className="font-sans text-xs tracking-widest uppercase text-editorial-fg/50 animate-pulse">Running Isolation...</p>
+                </div>
+              ) : outputUrl ? (
+                <ReactCompareSlider
+                  itemOne={<ReactCompareSliderImage src={preview!} alt="Original" style={{ objectFit: 'contain' }} />}
+                  itemTwo={<ReactCompareSliderImage src={outputUrl!} alt="Isolated" style={{ objectFit: 'contain' }} />}
+                  className="w-full h-full"
+                />
+              ) : (
+                <img src={preview} alt="Preview" className="w-full h-full object-contain" />
+              )}
+            </div>
+          </div>
 
-        {outputUrl && (
-          <div className="mt-8 w-full flex flex-col items-center">
-            <img
-              src={outputUrl}
-              alt="Output"
-              className="max-w-full h-auto rounded-xl shadow-lg border border-gray-200 mb-4"
-            />
-            <a
-              href={outputUrl}
-              download="no-bg.png"
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-green-400 to-blue-500 text-white font-semibold shadow-lg hover:scale-105 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
-            >
-              Download Image
-            </a>
+          <div className="p-4 md:p-6 border-t border-editorial-fg/10 bg-editorial-bg flex justify-between items-center shrink-0">
+            {!outputUrl ? (
+              <div className="w-full flex justify-end">
+                <button onClick={processImage} disabled={isLoading} className="btn-editorial w-full sm:w-auto">
+                  Execute Isolation
+                </button>
+              </div>
+            ) : (
+              <>
+                <span className="font-sans text-[10px] tracking-widest uppercase text-editorial-fg/40 hidden sm:block">Export Artifact As:</span>
+                <div className="flex gap-4 w-full sm:w-auto">
+                  <button onClick={() => handleDownload('webp')} className="btn-editorial-outline flex-1 sm:flex-none py-3 px-6">
+                    WEBP
+                  </button>
+                  <button onClick={() => handleDownload('png')} className="btn-editorial-outline flex-1 sm:flex-none py-3 px-6">
+                    PNG
+                  </button>
+                  <button onClick={() => handleDownload('jpeg')} className="btn-editorial-outline flex-1 sm:flex-none py-3 px-6">
+                    JPG
+                  </button>
+                </div>
+              </>
+            )}
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -1,67 +1,41 @@
-# 🎯 Drop The BG
+# Nulldrop.
 
-**Drop The BG** is a powerful and intuitive web application for removing backgrounds from images.
+> **Sever the Background.**
 
----
-
-## 🚀 Features
-
-- 🌟 Clean, modern interface with Tailwind CSS
-- ⚡ Fast and accurate background removal with `rembg`
-- 🖼️ Supports JPG, PNG image formats
-- 📥 Easy file upload and download
-- 🎨 Real-time preview of both original and processed image
-- 🖱️ Drag-and-drop or manual file selection
-- ✅ Option to choose download destination (via browser)
-- 🔗 Footer with GitHub & LinkedIn links
+An elegant, browser-based utility for high-fidelity subject isolation. Powered by state-of-the-art dichotomous image segmentation (BriaRMBG 1.4 / ISNet). Built with absolute zero data retention.
 
 ---
 
-## 🛠️ Tech Stack
+### Philosophy
+Nulldrop rejects the typical "SaaS" aesthetic. It is designed with the typographic rigor and intentional negative space of high-fashion print editorial magazines. 
 
-- **Frontend:** React (TypeScript), Tailwind CSS, Vite
-- **Backend:** FastAPI (Python), rembg
-- **Others:** Axios, framer-motion, react-icons, and more
+No subscriptions. No tracking. Pure local inference.
 
----
+### Technical Architecture
+- **Frontend:** React + TypeScript + Vite + TailwindCSS
+- **Backend:** FastAPI + Python
+- **AI Core:** `rembg` utilizing BriaRMBG 1.4 for sub-pixel edge detection and alpha matting
+- **Export Formats:** Lossless WEBP, PNG, JPG (canvas-based client-side conversion)
 
-## 📦 Installation & Setup
+### Local Deployment
 
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/bijanmurmu/drop-the-bg.git
-cd drop-the-bg
-```
-
----
-
-### 2. Backend Setup (FastAPI)
-
+**1. Backend (AI Inference Engine)**
 ```bash
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn main:app --reload
+python -m uvicorn main:app --reload
 ```
 
----
-
-### 3. Frontend Setup (Vite + React + Tailwind)
-
+**2. Frontend (Editorial Interface)**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
----
+### Community & Contribution
+Nulldrop is an open-source initiative. We welcome architectural improvements, UI refinements, and deployment templates. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting pull requests.
 
-## 📁 How It Works
-
-1. **User uploads an image** from the frontend interface.
-2. The image is sent to the **FastAPI backend**.
-3. Background is removed using the `rembg` library.
-4. The processed image is returned and shown in the browser.
-5. User can **download** the background-free version.
+Engineered by Bijan Murmu.

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Subtle rounded corners for the canvas -->
+  <rect width="256" height="256" rx="40" fill="#F5F2EB"/>
+  
+  <!-- Subtle Inner Frame matching the curve -->
+  <rect x="12" y="12" width="232" height="232" rx="28" fill="none" stroke="#1A1A18" stroke-width="4" stroke-opacity="0.15"/>
+
+  <!-- Elegant Serif Italic N -->
+  <text x="115" y="190" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-style="italic" font-size="180" fill="#1A1A18" text-anchor="middle">N</text>
+  
+  <!-- Red Period / The 'Drop' -->
+  <circle cx="205" cy="180" r="20" fill="#A63A28"/>
+</svg>
