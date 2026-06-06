@@ -28,7 +28,15 @@ model_session = None
 def get_session():
     global model_session
     if model_session is None:
-        model_session = new_session("silueta")
+        if os.environ.get("RENDER") is not None:
+            # Render Free Tier: Must use lightweight model to prevent 512MB RAM crash
+            model_session = new_session("silueta")
+        else:
+            # Local / Oracle: Unleash State-Of-The-Art models for pixel-perfect hair and fur
+            try:
+                model_session = new_session("briarmbg1.4")
+            except Exception:
+                model_session = new_session("isnet-general-use")
     return model_session
 
 @app.post("/remove-bg")
@@ -57,14 +65,14 @@ def remove_bg(file: UploadFile = File(...)):
         
         session = get_session()
         
-        # Premium Edge Configuration
+        # Absolute Perfection Edge Configuration
         result_bytes = remove(
             input_bytes,
             session=session,
             alpha_matting=True,
             alpha_matting_foreground_threshold=240,
-            alpha_matting_background_threshold=10,
-            alpha_matting_erode_size=10,
+            alpha_matting_background_threshold=15, # Lifted slightly to grab fine, semi-transparent hair strands
+            alpha_matting_erode_size=11, # Tuned to prevent "eating" into rigid edges while matting hair
             post_process_mask=True
         )
         
