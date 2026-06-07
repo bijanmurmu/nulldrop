@@ -66,13 +66,12 @@ def remove_bg(file: UploadFile = File(...)):
         session = get_session()
         
         # Absolute Perfection Edge Configuration
+        # CRITICAL: We DISABLE alpha_matting! State-of-the-art models natively output 
+        # perfectly anti-aliased sub-pixel hair masks. Forcing the legacy PyMatting 
+        # algorithm over it actually DESTROYS the neural network's native precision!
         result_bytes = remove(
             input_bytes,
             session=session,
-            alpha_matting=True,
-            alpha_matting_foreground_threshold=240,
-            alpha_matting_background_threshold=15, # Lifted slightly to grab fine, semi-transparent hair strands
-            alpha_matting_erode_size=11, # Tuned to prevent "eating" into rigid edges while matting hair
             post_process_mask=True
         )
         
