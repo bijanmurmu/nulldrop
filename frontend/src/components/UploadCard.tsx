@@ -3,7 +3,7 @@ import { ReactCompareSlider, ReactCompareSliderImage, ReactCompareSliderHandle }
 import toast from "react-hot-toast";
 
 const isDev = import.meta.env.DEV;
-const fallbackUrl = isDev ? "http://localhost:8000" : "https://nulldrop.onrender.com";
+const fallbackUrl = isDev ? "http://localhost:8000" : "https://bijanmurmu-nulldrop-backend.hf.space";
 const RAW_API_URL = import.meta.env.VITE_API_URL || fallbackUrl;
 const API_URL = RAW_API_URL.replace(/\/$/, ""); // Strip trailing slash to prevent 307 Redirect CORS errors
 const UploadCard = () => {
